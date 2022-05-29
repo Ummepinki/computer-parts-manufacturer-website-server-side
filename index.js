@@ -51,6 +51,7 @@ async function run() {
             const query = { customerEmail: customerEmail };
             const bookings = await bookingCollection.find(query).toArray();
             res.send(bookings);
+            
 
         })
 
