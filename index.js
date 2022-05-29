@@ -15,12 +15,38 @@ async function run() {
     try {
         await client.connect();
         const partsCollection = client.db('computer_parts').collection('parts');
+        const bookingCollection = client.db('computer_parts').collection('booking');
+
+
         app.get('/parts', async (req, res) => {
             const query = {};
             const cursor = partsCollection.find(query);
             const parts = await cursor.toArray();
             res.send(parts);
-        })
+        });
+
+        app.get('/parts/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const parts = await partsCollection.findOne(query);
+            console.log(parts);
+            res.send(parts);
+        });
+
+        app.post('/booking', async (req, res) => {
+            const booking = req.body;
+            const query = { orders: booking.orders, customerEmail: booking.customerEmail };
+            const exists = await bookingCollection.findOne(query);
+            if (exists) {
+                return res.send({ success: false, booking: exists })
+            }
+
+            const result = await bookingCollection.insertOne(booking);
+            res.send({ success: true, result });
+        });
+
+
     }
     finally {
 
