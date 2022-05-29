@@ -15,7 +15,7 @@ async function run() {
     try {
         await client.connect();
         const partsCollection = client.db('computer_parts').collection('parts');
-        const bookingCollection = client.db('computer_parts').collection('booking');
+        const bookingCollection = client.db('computer_parts').collection('bookings');
 
 
         app.get('/parts', async (req, res) => {
@@ -45,6 +45,14 @@ async function run() {
             const result = await bookingCollection.insertOne(booking);
             res.send({ success: true, result });
         });
+
+        app.get('/booking', async (req, res) => {
+            const customerEmail = req.query.customerEmail;
+            const query = { customerEmail: customerEmail };
+            const bookings = await bookingCollection.find(query).toArray();
+            res.send(bookings);
+
+        })
 
 
     }
