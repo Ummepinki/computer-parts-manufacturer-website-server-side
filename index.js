@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const app = express()
@@ -16,6 +17,7 @@ async function run() {
         await client.connect();
         const partsCollection = client.db('computer_parts').collection('parts');
         const bookingCollection = client.db('computer_parts').collection('bookings');
+        const userCollection = client.db('computer_parts').collection('users');
 
 
         app.get('/parts', async (req, res) => {
@@ -24,6 +26,19 @@ async function run() {
             const parts = await cursor.toArray();
             res.send(parts);
         });
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ result, token });
+        })
 
         app.get('/parts/:id', async (req, res) => {
 
@@ -51,7 +66,7 @@ async function run() {
             const query = { customerEmail: customerEmail };
             const bookings = await bookingCollection.find(query).toArray();
             res.send(bookings);
-            
+
 
         })
 
