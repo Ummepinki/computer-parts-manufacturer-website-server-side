@@ -38,6 +38,7 @@ async function run() {
         const bookingCollection = client.db('computer_parts').collection('bookings');
         const userCollection = client.db('computer_parts').collection('users');
         const productCollection = client.db('computer_parts').collection('products');
+        const paymentCollection = client.db('computer_parts').collection('payments');
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -61,9 +62,9 @@ async function run() {
                 currency: 'usd',
                 payment_method_types: ['card']
             });
-            res.send({
-                clientSecret: paymentIntent.client_secret
-            })
+            res.send({ clientSecret: paymentIntent.client_secret })
+
+
         });
 
 
@@ -159,6 +160,24 @@ async function run() {
             const booking = await bookingCollection.findOne(query);
             res.send(booking);
         });
+
+
+        app.patch('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const result = await paymentCollection.insertOne(payment);
+            const updatedBooking = await bookingCollection.updateOne(filter, updatedDoc);
+
+            res.send(updatedBooking);
+        });
+
 
         app.get('/product', verifyJWT, verifyAdmin, async (req, res) => {
             const product = await productCollection.find().toArray();
